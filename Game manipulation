@@ -1,0 +1,120 @@
+void move_block(int dir)
+{ //moving block 
+    int i, j;
+
+    switch (dir) {
+    case LEFT: //leftside
+        for (i = 0; i < 4; i++)
+        { //erasing the block in current coordinate
+            for (j = 0; j < 4; j++)
+            {
+                if (blocks[b_type][b_rotation][i][j] == 1) main_org[by + i][bx + j] = EMPTY;
+            }
+        }
+        for (i = 0; i < 4; i++)
+        {
+            for (j = 0; j < 4; j++)
+            {
+                if (blocks[b_type][b_rotation][i][j] == 1) main_org[by + i][bx + j - 1] = ACTIVE_BLOCK;
+            }
+        }
+        bx--; //moving coordinate
+        break;
+
+    case RIGHT:    //right direction 
+        for (i = 0; i < 4; i++)
+        {
+            for (j = 0; j < 4; j++)
+            {
+                if (blocks[b_type][b_rotation][i][j] == 1) main_org[by + i][bx + j] = EMPTY;
+            }
+        }
+        for (i = 0; i < 4; i++)
+        {
+            for (j = 0; j < 4; j++)
+            {
+                if (blocks[b_type][b_rotation][i][j] == 1) main_org[by + i][bx + j + 1] = ACTIVE_BLOCK;
+            }
+        }
+        bx++;
+        break;
+
+    case DOWN:    //moving down
+        for (i = 0; i < 4; i++)
+        {
+            for (j = 0; j < 4; j++)
+            {
+                if (blocks[b_type][b_rotation][i][j] == 1) main_org[by + i][bx + j] = EMPTY;
+            }
+        }
+        for (i = 0; i < 4; i++)
+        {
+            for (j = 0; j < 4; j++)
+            {
+                if (blocks[b_type][b_rotation][i][j] == 1) main_org[by + i + 1][bx + j] = ACTIVE_BLOCK;
+            }
+        }
+        by++;
+        break;
+
+    case UP: //rotating when user press the button
+        for (i = 0; i < 4; i++)
+        { //erasing one block in the coordinate
+            for (j = 0; j < 4; j++)
+            {
+                if (blocks[b_type][b_rotation][i][j] == 1) main_org[by + i][bx + j] = EMPTY;
+            }
+        }
+        b_rotation = (b_rotation + 1) % 4; //increase rotation value
+        for (i = 0; i < 4; i++)
+        {
+            for (j = 0; j < 4; j++)
+            {
+                if (blocks[b_type][b_rotation][i][j] == 1) main_org[by + i][bx + j] = ACTIVE_BLOCK;
+            }
+        }
+        break;
+
+    case 100: //block is able to rotate right next to the block
+        for (i = 0; i < 4; i++)
+        {
+            for (j = 0; j < 4; j++)
+            {
+                if (blocks[b_type][b_rotation][i][j] == 1) main_org[by + i][bx + j] = EMPTY;
+            }
+        }
+        b_rotation = (b_rotation + 1) % 4;
+        for (i = 0; i < 4; i++)
+        {
+            for (j = 0; j < 4; j++)
+            {
+                if (blocks[b_type][b_rotation][i][j] == 1) main_org[by + i - 1][bx + j] = ACTIVE_BLOCK;
+            }
+        }
+        by--;
+        break;
+    }
+}
+
+void drop_block(void)
+{
+    int i, j;
+
+    if (crush_on && check_crush(bx, by + 1, b_rotation) == true) crush_on = 0; //turning off crush flag if down is empty
+    if (crush_on && check_crush(bx, by + 1, b_rotation) == false)
+    { //if down is not empty with cursh flag
+        for (i = 0; i < MAIN_Y; i++)
+        { //stabling the current blcok
+            for (j = 0; j < MAIN_X; j++)
+            {
+                if (main_org[i][j] == ACTIVE_BLOCK) main_org[i][j] = INACTIVE_BLOCK;
+            }
+        }
+        crush_on = 0; //turning off flag
+        check_line(); //checking line
+        new_block_on = 1;  
+        return; //exiting function
+    }
+    if (check_crush(bx, by + 1, b_rotation) == true) move_block(DOWN); //move down if empty
+    if (check_crush(bx, by + 1, b_rotation) == false) crush_on++; //if no, return crush flag
+}

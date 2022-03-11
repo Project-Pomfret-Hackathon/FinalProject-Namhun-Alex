@@ -1,0 +1,115 @@
+void check_key()
+{
+    key = 0; //reseting key value 
+
+    if (_kbhit())
+    { //if key input possible
+        key = _getch(); //getting key value
+        if (key == 224)
+        { //if it is direction key
+            do { key = _getch(); } while (key == 224);  //discarding key command from direction
+            switch (key)
+            {
+            case LEFT:
+                if (check_crush(bx - 1, by, b_rotation) == true) move_block(LEFT);
+                break;
+            case RIGHT:
+                if (check_crush(bx + 1, by, b_rotation) == true) move_block(RIGHT);
+                break;
+            case DOWN:
+                if (check_crush(bx, by + 1, b_rotation) == true) move_block(DOWN);
+                break;
+            case UP:
+                if (check_crush(bx, by, (b_rotation + 1) % 4) == true) move_block(UP);
+                //checking if rotation is possible
+                else if (crush_on == 1 && check_crush(bx, by - 1, (b_rotation + 1) % 4) == true) move_block(100);
+            }
+        }
+        else
+        { //if it is not direction key
+            switch (key)
+            {
+            case SPACE: //space pressed
+                space_key_on = 1;
+                while (crush_on == 0)
+                { //move till it reach the bottom
+                    drop_block();
+                    score += level; // hard drop bonus
+                    gotoxy(STATUS_X_ADJ, STATUS_Y_SCORE); printf("        %6d", score); //showing score 
+                }
+                break;
+            case P:  
+            case p:  
+                pause();
+                break;
+            case ESC: //if esc pressed
+                system("cls"); //erasing display
+                exit(0); //exiting game
+            }
+        }
+    }
+    while (_kbhit()) _getch();
+}
+
+int check_crush(int bx, int by, int b_rotation)
+{ //checking the rotation function at a particular coordinate
+    int i, j;
+
+    for (i = 0; i < 4; i++)
+    {
+        for (j = 0; j < 4; j++)
+        { //overlappinng, return false -> block is blocked
+            if (blocks[b_type][b_rotation][i][j] == 1 && main_org[by + i][bx + j] > 0) return false;
+        }
+    }
+    return true; //no overlapping, return true
+};
+
+void check_line()
+{
+    int i, j, k, l;
+
+    int block_amount; //storing block number
+    int combo = 0; //combo_count variable reset
+
+    for (i = MAIN_Y - 2; i > 3;)
+    {
+        block_amount = 0; //block storage reset
+        for (j = 1; j < MAIN_X - 1; j++)
+        { //counting block between floor
+            if (main_org[i][j] > 0) block_amount++;
+        }
+        if (block_amount == MAIN_X - 2)
+        { //if the frame is full with blcok 
+            if (level_up_on == 0)
+            { 
+                score += 100 * level; //increasing score
+                cnt++; //counting erased line
+                combo++; //increasing combo  
+            }
+            for (k = i; k > 1; k--)
+            {
+                for (l = 1; l < MAIN_X - 1; l++)
+                {
+                    if (main_org[k - 1][l] != CEILLING) main_org[k][l] = main_org[k - 1][l];
+                    if (main_org[k - 1][l] == CEILLING) main_org[k][l] = EMPTY;
+                    //if up line is ceiling, add one line
+                    //to display the game_over flag
+                }
+            }
+        }
+        else i--;
+    }
+    if (combo)
+    { //refreshing score and level board
+        if (combo > 1)
+        { //displaying log for combo
+            gotoxy(MAIN_X_ADJ + (MAIN_X / 2) - 1, MAIN_Y_ADJ + by - 2); printf("%d COMBO!", combo);
+            Sleep(500);
+            score += (combo * level * 100);
+            reset_main_cpy(); //reseting main_cpy
+        }
+        gotoxy(STATUS_X_ADJ, STATUS_Y_GOAL); printf(" GOAL  : %5d", (cnt <= 10) ? 10 - cnt : 0);
+        gotoxy(STATUS_X_ADJ, STATUS_Y_SCORE); printf("        %6d", score);
+    }
+}
